@@ -10,6 +10,36 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,200..900,0..100,0..1;1,9..144,200..900,0..100,0..1&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
+<meta name="robots" content="noindex, nofollow" />
+
+<script>
+  // Client-side password gate. Not real security — password is readable in source.
+  (function(){
+    var PW = 'Alice';
+    var KEY = 'awg_ok';
+    var params = new URLSearchParams(location.search);
+    var fromUrl = params.get('pw') || params.get('password');
+    var ok = false;
+    try { ok = sessionStorage.getItem(KEY) === '1'; } catch(e){}
+    if (fromUrl && fromUrl === PW){
+      try { sessionStorage.setItem(KEY, '1'); } catch(e){}
+      params.delete('pw'); params.delete('password');
+      var q = params.toString();
+      history.replaceState({}, '', location.pathname + (q ? '?'+q : '') + location.hash);
+      ok = true;
+    }
+    if (!ok){ document.documentElement.classList.add('locked'); }
+    window.__awgUnlock = function(val){
+      if (val === PW){
+        try { sessionStorage.setItem(KEY, '1'); } catch(e){}
+        document.documentElement.classList.remove('locked');
+        return true;
+      }
+      return false;
+    };
+  })();
+</script>
+
 <style>
   :root{
     --bone:#F2ECDF;
@@ -738,6 +768,94 @@
     *,*::before,*::after{animation:none!important;transition:none!important}
   }
 
+  /* ————— Password gate ————— */
+  html.locked body > header,
+  html.locked body > main,
+  html.locked body > footer { display:none !important; }
+  html.locked body { overflow:hidden; height:100vh; }
+  html:not(.locked) #gate { display:none; }
+
+  #gate{
+    position:fixed;inset:0;z-index:9999;
+    background:
+      radial-gradient(circle at 80% 20%, rgba(199,107,74,.18), transparent 55%),
+      radial-gradient(circle at 12% 88%, rgba(44,74,62,.22), transparent 60%),
+      var(--bone);
+    display:grid;place-items:center;
+    padding:clamp(18px, 4vw, 48px);
+  }
+  #gate::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.14  0 0 0 0 0.12  0 0 0 0.22 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity:.35;mix-blend-mode:multiply;
+  }
+  .gate-card{
+    position:relative;z-index:2;
+    width:min(440px, 100%);
+    background:var(--bone-warm);
+    border:1px solid var(--paper-line);
+    padding:clamp(28px, 4vw, 44px);
+    box-shadow: 0 30px 60px -30px rgba(27,36,32,.35);
+    text-align:left;
+  }
+  .gate-eyebrow{
+    font-family:var(--sans);
+    font-weight:500;font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--moss);display:flex;align-items:center;gap:.7rem;
+    margin-bottom:1.2rem;
+  }
+  .gate-eyebrow::before{content:"";width:1.4rem;height:1px;background:var(--moss)}
+  .gate-card h1{
+    font-family:var(--serif);font-weight:330;
+    font-variation-settings:"opsz" 144, "SOFT" 30, "WONK" 1;
+    letter-spacing:-0.022em;line-height:1;
+    font-size:clamp(1.8rem, 4vw, 2.6rem);
+    margin:0 0 .9rem;color:var(--ink);
+  }
+  .gate-card h1 em{
+    font-style:italic;font-weight:300;
+    font-variation-settings:"opsz" 144, "SOFT" 80, "WONK" 1;
+    color:var(--clay-deep);
+  }
+  .gate-card p{
+    color:var(--ink-soft);font-size:.95rem;line-height:1.5;
+    margin:0 0 1.4rem;
+  }
+  .gate-form{display:grid;gap:.9rem}
+  .gate-form label{
+    font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--moss);font-weight:500;
+  }
+  .gate-form input{
+    font:inherit;font-family:var(--serif);font-size:1.2rem;
+    color:var(--ink);background:transparent;
+    border:0;border-bottom:1px solid var(--paper-line);
+    padding:.55rem 0;outline:none;
+    transition:border-color .3s var(--ease);
+  }
+  .gate-form input:focus{border-bottom-color:var(--moss)}
+  .gate-form .err{
+    font-size:.78rem;color:var(--clay-deep);
+    min-height:1.1em;margin-top:-.2rem;
+    font-family:var(--serif);font-style:italic;
+    font-variation-settings:"opsz" 14, "SOFT" 80;
+  }
+  .gate-form button{
+    justify-self:start;margin-top:.6rem;
+    background:var(--moss);color:var(--bone);
+    padding:.85rem 1.4rem;border-radius:999px;
+    font-weight:500;letter-spacing:.04em;font-size:.88rem;
+    display:inline-flex;align-items:center;gap:.7rem;
+    transition:background .3s var(--ease), transform .3s var(--ease);
+  }
+  .gate-form button:hover{background:var(--ink);transform:translateY(-1px)}
+  .gate-foot{
+    margin-top:1.8rem;padding-top:1.2rem;
+    border-top:1px solid var(--paper-line);
+    font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+
   /* ————— Mobile refinements ————— */
   @media (max-width:780px){
     .topbar{padding:12px 18px}
@@ -822,6 +940,22 @@
 </style>
 </head>
 <body>
+
+<!-- PASSWORD GATE -->
+<div id="gate" aria-hidden="false">
+  <div class="gate-card">
+    <div class="gate-eyebrow">Vorschau · Entwurf</div>
+    <h1>Noch nicht <em>öffentlich.</em></h1>
+    <p>Diese Seite ist ein früher Entwurf und nur für Eingeladene sichtbar. Bitte gib das Passwort ein, das du von Jonas erhalten hast.</p>
+    <form class="gate-form" onsubmit="event.preventDefault(); var e=this.querySelector('.err'); if(window.__awgUnlock(this.pw.value)){e.textContent=''} else {e.textContent='Falsches Passwort.'; this.pw.select();}">
+      <label for="pw">Passwort</label>
+      <input id="pw" name="pw" type="password" autocomplete="off" autofocus required />
+      <div class="err"></div>
+      <button type="submit">Weiter <span aria-hidden="true">→</span></button>
+    </form>
+    <div class="gate-foot">Alice Windeln · ZMP · Mönchengladbach</div>
+  </div>
+</div>
 
 <!-- TOP BAR -->
 <header class="topbar">
